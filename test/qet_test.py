@@ -35,7 +35,7 @@ base_qubits = layers + 1
 angles = [-0.20409113, -0.91173829, 0.91173829, 0.20409113]
 
 dev = qml.device("default.qubit", wires=base_qubits)
-dev2 = qml.device("default.qubit", wires= 2*base_qubits+3)
+dev2 = qml.device("default.qubit", wires= 2*base_qubits+2)
 
 @qml.qnode(dev)
 def circuit():
@@ -44,7 +44,7 @@ def circuit():
 
 @qml.qnode(dev2)
 def circuitGate():
-    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(base_qubits+3, 2*base_qubits+3)), ancilla_wires=list(range(base_qubits+3)), angles=angles,memory_state_prep=mem_0, transition=transition)
+    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(base_qubits+2, 2*base_qubits+2)), ancilla_wires=list(range(base_qubits+2)), angles=angles,memory_state_prep=mem_0, transition=transition)
     return qml.state()
 
 x = circuit().real

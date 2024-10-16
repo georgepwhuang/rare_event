@@ -1,7 +1,12 @@
 from rare_event import iMPS, RecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET
 import numpy as np
+from scipy.special import erf
 import pennylane as qml
-from pyqsp
+from pyqsp import angle_sequence, response
+from pyqsp.poly import PolyTaylorSeries
+
+import warnings
+warnings.filterwarnings("ignore")
 
 def pcoin(p):
     T0 = np.array([
@@ -23,27 +28,69 @@ transition = imps_pcoin.to_unitary()
 layers = 2
 base_qubits = layers + 1
 
-degrees
+delta = 10
+threshold = 0.2
 
-angles = [-0.20409113, -0.91173829, 0.91173829, 0.20409113]
+simu = True
 
-dev = qml.device("default.qubit", wires=base_qubits)
-dev2 = qml.device("default.qubit", wires= 2*base_qubits+3)
+func = lambda x: (erf(delta*(x + threshold)) - erf(delta*(x - threshold))) / 2
+polydeg = 6
+max_scale = 0.9 # Maximum norm (<1) for rescaling.
+true_func = lambda x: np.where(np.abs(x) < threshold, 1, 0) * max_scale
+
+poly = PolyTaylorSeries().taylor_series(
+    func=func,
+    degree=polydeg,
+    max_scale=max_scale,
+    cheb_samples=2*polydeg)
+
+phiset = angle_sequence.QuantumSignalProcessingPhases(
+    poly,
+    method='laurent',
+    signal_operator="Wx")
+
+#response.PlotQSPResponse(
+#    phiset,
+#    pcoefs=poly.coef,
+#    target=true_func)
+
+def convert_angles(angles):
+    num_angles = len(angles)
+    update_vals = np.zeros(num_angles)
+
+    update_vals[0] = 3 * np.pi / 4 - (3 + len(angles) % 4) * np.pi / 2
+    update_vals[1:-1] = np.pi / 2
+    update_vals[-1] = -np.pi / 4
+
+    return angles + update_vals
+
+phiset = convert_angles(phiset)
+
+dev = qml.device("lightning.qubit", wires=base_qubits)
+if simu:
+    dev2 = qml.device("lightning.qubit", wires=2*base_qubits+2)
+else: 
+    dev2 = qml.device("lightning.qubit", wires=2*base_qubits+3)
 
 @qml.qnode(dev)
 def circuit():
     RecurrentQuantumCircuit(wires=list(range(base_qubits)),memory_state_prep=mem_0, transition=transition)
     return qml.state()
 
+if simu:
+    wires = list(range(base_qubits+2, 2*base_qubits+2))
+    ancilla_wires = list(range(base_qubits+2))
+else: 
+    wires = list(range(base_qubits+3, 2*base_qubits+3))
+    ancilla_wires = list(range(base_qubits+3))
+    
 @qml.qnode(dev2)
-def circuitGate():
-    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(base_qubits+3, 2*base_qubits+3)), ancilla_wires=list(range(base_qubits+3)), angles=angles,memory_state_prep=mem_0, transition=transition)
+def circuit2():
+    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=wires, ancilla_wires=ancilla_wires, angles=phiset, simulate=simu, memory_state_prep=mem_0, transition=transition)
     return qml.state()
 
 x = circuit().real
-print((5*x**3-3*x)/2)
-mat = qml.matrix(circuitGate)()
-print(np.diag((mat * (np.abs(mat)>0.0001)).real[:2**base_qubits,:2**base_qubits]))
+print(func(x))
 
-fig, ax = qml.draw_mpl(circuitGate)()
-fig.savefig('qet.png')
+mat = qml.matrix(circuit2)()
+print(np.diag((mat * (np.abs(mat)>1e-8)).real[:2**base_qubits,:2**base_qubits]))
