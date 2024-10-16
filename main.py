@@ -52,12 +52,12 @@ poly = PolyTaylorSeries().taylor_series(
     chebyshev_basis=True,
     signal_operator="Wx")
 
-response.PlotQSPResponse(
-    phiset,
-    pcoefs=poly,
-    target=true_func,
-    sym_qsp=True,
-    simul_error_plot=True)
+#response.PlotQSPResponse(
+#    phiset,
+#    pcoefs=poly,
+#    target=true_func,
+#    sym_qsp=True,
+#    simul_error_plot=True)
 
 def convert_angles(angles):
     num_angles = len(angles)
