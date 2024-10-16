@@ -85,7 +85,7 @@ class iMPS(object):
             tran_dim = self._dim**2
             self._E = np.zeros((tran_dim, tran_dim), dtype=complex)
             for i in range(self.alp_size):
-                self._E += sp.kron(self.smatrix[i], sp.conjugate(self.smatrix[i]))
+                self._E += LA.kron(self.smatrix[i], np.conjugate(self.smatrix[i]))
         return self._E
 
     '''

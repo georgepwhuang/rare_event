@@ -1,5 +1,5 @@
 import pennylane as qml
-import numpy as np
+from pennylane.typing import TensorLike
 
 
 def MultiControlledZ(wires, control_values=None):
@@ -39,11 +39,10 @@ def hatS(wires):
 def Uc(base, wires, *args, **kwargs):
     assert len(wires) % 2 == 1
     n = len(wires)//2
-    if isinstance(base, np.ndarray) or isinstance(base, qml.QubitUnitary):
+    if isinstance(base, TensorLike):
         qml.ControlledQubitUnitary(base, control_wires=wires[n], wires=wires[:n], control_values=[0], unitary_check=True)
     elif isinstance(base, qml.operation.Operator) or callable(base):
-       
-        qml.ctrl(base, control=wires[n], control_values=[0])(*args, wires=wires[:n], **kwargs)
+        qml.ctrl(base, control=wires[n], control_values=[0])(wires=wires[:n], *args, **kwargs)
     
 
 def C(wires):
