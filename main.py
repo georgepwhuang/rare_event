@@ -28,39 +28,44 @@ transition = imps_pcoin.to_unitary()
 layers = 2
 base_qubits = layers + 1
 
-delta = 10
-threshold = 0.2
+delta = 50
+threshold = 0.1
 
 simu = True
 
 func = lambda x: (erf(delta*(x + threshold)) - erf(delta*(x - threshold))) / 2
-polydeg = 6
+polydeg = 8
 max_scale = 0.9 # Maximum norm (<1) for rescaling.
-true_func = lambda x: np.where(np.abs(x) < threshold, 1, 0) * max_scale
+true_func = lambda x: np.where(np.abs(x) < threshold, 1, 0)
+
 
 poly = PolyTaylorSeries().taylor_series(
     func=func,
     degree=polydeg,
     max_scale=max_scale,
+    chebyshev_basis=True,
     cheb_samples=2*polydeg)
 
-phiset = angle_sequence.QuantumSignalProcessingPhases(
+(phiset, red_phiset, parity) = angle_sequence.QuantumSignalProcessingPhases(
     poly,
-    method='laurent',
+    method='sym_qsp',
+    chebyshev_basis=True,
     signal_operator="Wx")
 
-#response.PlotQSPResponse(
-#    phiset,
-#    pcoefs=poly.coef,
-#    target=true_func)
+response.PlotQSPResponse(
+    phiset,
+    pcoefs=poly,
+    target=true_func,
+    sym_qsp=True,
+    simul_error_plot=True)
 
 def convert_angles(angles):
     num_angles = len(angles)
     update_vals = np.zeros(num_angles)
 
-    update_vals[0] = 3 * np.pi / 4 - (3 + len(angles) % 4) * np.pi / 2
+    update_vals[0] = np.pi / 2 - (3 + len(angles) % 4) * np.pi / 2
     update_vals[1:-1] = np.pi / 2
-    update_vals[-1] = -np.pi / 4
+    update_vals[-1] = -np.pi / 2
 
     return angles + update_vals
 
@@ -90,7 +95,7 @@ def circuit2():
     return qml.state()
 
 x = circuit().real
-print(func(x))
+print(true_func(x))
 
 mat = qml.matrix(circuit2)()
 print(np.diag((mat * (np.abs(mat)>1e-8)).real[:2**base_qubits,:2**base_qubits]))
