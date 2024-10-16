@@ -17,25 +17,6 @@ def R(wires):
     MultiControlledZ(wires=wires[1:n+1]+[wires[0]])
     qml.PauliX(wires=wires[0])
 
-
-def hatZ(wires):
-    assert len(wires) % 2 == 1
-    n = len(wires)//2
-    qml.PauliZ(wires=wires[n])
-
-
-def hatH(wires):
-    assert len(wires) % 2 == 1
-    n = len(wires)//2
-    qml.Hadamard(wires=wires[n])
-
-
-def hatS(wires):
-    assert len(wires) % 2 == 1
-    n = len(wires)//2
-    qml.S(wires=wires[n])
-
-
 def Uc(base, wires, *args, **kwargs):
     assert len(wires) % 2 == 1
     n = len(wires)//2
@@ -43,6 +24,14 @@ def Uc(base, wires, *args, **kwargs):
         qml.ControlledQubitUnitary(base, control_wires=wires[n], wires=wires[:n], control_values=[0], unitary_check=True)
     elif isinstance(base, qml.operation.Operator) or callable(base):
         qml.ctrl(base, control=wires[n], control_values=[0])(wires=wires[:n], *args, **kwargs)
+        
+def Uc_adj(base, wires, *args, **kwargs):
+    assert len(wires) % 2 == 1
+    n = len(wires)//2
+    if isinstance(base, TensorLike):
+        qml.adjoint(qml.ControlledQubitUnitary)(base, control_wires=wires[n], wires=wires[:n], control_values=[0], unitary_check=True)
+    elif isinstance(base, qml.operation.Operator) or callable(base):
+        qml.ctrl(qml.adjoint(base), control=wires[n], control_values=[0])(wires=wires[:n], *args, **kwargs)
     
 
 def C(wires):
@@ -54,20 +43,40 @@ def C(wires):
 
 def W(base, wires, p, *args, **kwargs):
     assert len(wires) % 2 == 1
-    hatH(wires)
+    n = len(wires)//2
+    qml.Hadamard(wires[n])
     Uc(base, wires, *args, **kwargs)
     C(wires)
     if int(bool(p)) == 1:
-        hatS(wires)
-    hatH(wires)
+        qml.S(wires[n])
+    qml.Hadamard(wires[n])
+    
+def W_adj(base, wires, p, *args, **kwargs):
+    assert len(wires) % 2 == 1
+    n = len(wires)//2
+    qml.Hadamard(wires[n])
+    if int(bool(p)) == 1:
+        qml.adjoint(qml.S)(wires[n])
+    C(wires)
+    Uc_adj(base, wires, *args, **kwargs)
+    qml.Hadamard(wires[n])
     
 
 def G(base, wires, p, *args, **kwargs):
     assert len(wires) % 2 == 1
-    hatZ(wires)
-    qml.adjoint(W)(base, wires, p, *args, **kwargs)
+    n = len(wires)//2
+    qml.PauliZ(wires[n])
+    W_adj(base, wires, p, *args, **kwargs)
     R(wires)
     W(base, wires, p, *args, **kwargs)
+    
+def G_adj(base, wires, p, *args, **kwargs):
+    assert len(wires) % 2 == 1
+    n = len(wires)//2
+    W_adj(base, wires, p, *args, **kwargs)
+    R(wires)
+    W(base, wires, p, *args, **kwargs)
+    qml.PauliZ(wires[n])
 
 
 def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, *args, **kwargs):
@@ -75,9 +84,9 @@ def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, *args, **kwargs):
     qml.Hadamard(wires=ancilla_wires[0])
     W(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
     qml.ctrl(G, control=ancilla_wires[0], control_values=[0])(base=U, wires=ancilla_wires[1:]+wires,p=p, **kwargs)
-    qml.ctrl(qml.adjoint(G), control=ancilla_wires[0], control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,p=p, *args, **kwargs)
+    qml.ctrl(G_adj, control=ancilla_wires[0], control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,p=p, *args, **kwargs)
     qml.Hadamard(wires=ancilla_wires[0])
-    qml.adjoint(W)(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
+    W_adj(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
     qml.PauliX(wires=ancilla_wires[0])
     qml.PauliZ(wires=ancilla_wires[0])
     qml.PauliX(wires=ancilla_wires[0])
