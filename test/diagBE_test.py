@@ -1,5 +1,5 @@
 import pennylane as qml
-from diagBE import RealDiagonalBlockEncoding
+from rare_event import RealDiagonalBlockEncoding
 import numpy as np
 
 dev = qml.device("default.qubit", wires=2)

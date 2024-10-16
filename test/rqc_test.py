@@ -1,8 +1,6 @@
 import numpy as np
-from imps import iMPS
+from rare_event import iMPS, RecurrentQuantumCircuit, RealDiagonalBlockEncoding
 import pennylane as qml
-from rqc import RecurrentQuantumCircuit
-from diagBE import RealDiagonalBlockEncoding
 
 def pcoin(p):
     """

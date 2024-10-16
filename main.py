@@ -1,21 +1,9 @@
+from rare_event import iMPS, RecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET
 import numpy as np
-from imps import iMPS
 import pennylane as qml
-from rqc import RecurrentQuantumCircuit
-from diagBE import RealDiagonalBlockEncoding
-from qet import QET
+from pyqsp
 
 def pcoin(p):
-    """
-    transition matrix for pcoin
-
-    -------------------
-    Parameters
-    -------------------
-    p:float
-    -------------------
-    
-    """
     T0 = np.array([
         [1.-p,p],
         [0.,0.]
@@ -34,6 +22,8 @@ transition = imps_pcoin.to_unitary()
 
 layers = 2
 base_qubits = layers + 1
+
+degrees
 
 angles = [-0.20409113, -0.91173829, 0.91173829, 0.20409113]
 
@@ -56,4 +46,4 @@ mat = qml.matrix(circuitGate)()
 print(np.diag((mat * (np.abs(mat)>0.0001)).real[:2**base_qubits,:2**base_qubits]))
 
 fig, ax = qml.draw_mpl(circuitGate)()
-fig.savefig('rqc.png')
+fig.savefig('qet.png')

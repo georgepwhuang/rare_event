@@ -8,11 +8,11 @@ def ProjCtrlPhaseShift(control_wires, target_wire, phi):
 def QET(BE, wires, ancilla_wires, angles, *args, **kwargs):
     deg = len(angles)
     for i in range(0, deg-2, 2):
-        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[i])
+        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[-i-1])
         BE(wires=wires, ancilla_wires=ancilla_wires[1:], *args, **kwargs)
-        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[i+1])
+        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[-i-2])
         qml.adjoint(BE)(wires=wires, ancilla_wires=ancilla_wires[1:], *args, **kwargs)
-    ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[i+2])
+    ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[-i-3])
     if len(angles) % 2 == 0:
         BE(wires=wires, ancilla_wires=ancilla_wires[1:], *args, **kwargs)
-        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[-1])
+        ProjCtrlPhaseShift(control_wires=ancilla_wires[1:], target_wire=ancilla_wires[0], phi = angles[0])
