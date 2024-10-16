@@ -31,10 +31,10 @@ base_qubits = layers + 1
 delta = 50
 threshold = 0.1
 
-simu = True
+simu = False
 
 func = lambda x: (erf(delta*(x + threshold)) - erf(delta*(x - threshold))) / 2
-polydeg = 8
+polydeg = 4
 max_scale = 0.9 # Maximum norm (<1) for rescaling.
 true_func = lambda x: np.where(np.abs(x) < threshold, 1, 0)
 
@@ -90,12 +90,18 @@ else:
     ancilla_wires = list(range(base_qubits+3))
     
 @qml.qnode(dev2)
-def circuit2():
+def circuitGate():
     QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=wires, ancilla_wires=ancilla_wires, angles=phiset, simulate=simu, memory_state_prep=mem_0, transition=transition)
     return qml.state()
 
 x = circuit().real
 print(true_func(x))
 
-mat = qml.matrix(circuit2)()
+mat = qml.matrix(circuitGate)()
 print(np.diag((mat * (np.abs(mat)>1e-8)).real[:2**base_qubits,:2**base_qubits]))
+
+try:
+    fig, ax = qml.draw_mpl(circuitGate, decimals=2)()
+    fig.savefig('algo.png')
+except:
+    pass
