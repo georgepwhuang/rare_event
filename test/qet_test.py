@@ -35,7 +35,8 @@ base_qubits = layers + 1
 angles = [-0.20409113, -0.91173829, 0.91173829, 0.20409113]
 
 dev = qml.device("default.qubit", wires=base_qubits)
-dev2 = qml.device("default.qubit", wires= 2*base_qubits+2)
+dev2 = qml.device("default.qubit", wires= 2*base_qubits+3)
+dev3 = qml.device("default.qubit", wires= base_qubits+1)
 
 @qml.qnode(dev)
 def circuit():
@@ -44,13 +45,24 @@ def circuit():
 
 @qml.qnode(dev2)
 def circuitGate():
-    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(base_qubits+2, 2*base_qubits+2)), ancilla_wires=list(range(base_qubits+2)), angles=angles,memory_state_prep=mem_0, transition=transition)
+    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(base_qubits+3, 2*base_qubits+3)), ancilla_wires=list(range(base_qubits+3)), simulate=False, angles=angles,memory_state_prep=mem_0, transition=transition)
+    return qml.state()
+
+@qml.qnode(dev3)
+def circuitSimu():
+    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=list(range(1, base_qubits+1)), ancilla_wires=[0], angles=angles,memory_state_prep=mem_0, transition=transition)
     return qml.state()
 
 x = circuit().real
 print((5*x**3-3*x)/2)
 mat = qml.matrix(circuitGate)()
-print(np.diag((mat * (np.abs(mat)>0.0001)).real[:2**base_qubits,:2**base_qubits]))
+print(np.round(np.diag((mat))[:2**base_qubits], 8).real)
+
+mat = qml.matrix(circuitSimu)()
+print(np.round(np.diag((mat))[:2**base_qubits], 8).real)
 
 fig, ax = qml.draw_mpl(circuitGate)()
 fig.savefig('qet.png')
+
+fig, ax = qml.draw_mpl(circuitSimu)()
+fig.savefig('qetsimu.png')

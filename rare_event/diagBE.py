@@ -1,5 +1,6 @@
 import pennylane as qml
 from pennylane.typing import TensorLike
+import numpy as np
 
 
 def MultiControlledZ(wires, control_values=None):
@@ -47,7 +48,7 @@ def W(base, wires, p, *args, **kwargs):
     qml.Hadamard(wires[n])
     Uc(base, wires, *args, **kwargs)
     C(wires)
-    if int(bool(p)) == 1:
+    if bool(p):
         qml.S(wires[n])
     qml.Hadamard(wires[n])
     
@@ -55,7 +56,7 @@ def W_adj(base, wires, p, *args, **kwargs):
     assert len(wires) % 2 == 1
     n = len(wires)//2
     qml.Hadamard(wires[n])
-    if int(bool(p)) == 1:
+    if bool(p):
         qml.adjoint(qml.S)(wires[n])
     C(wires)
     Uc_adj(base, wires, *args, **kwargs)
@@ -79,15 +80,30 @@ def G_adj(base, wires, p, *args, **kwargs):
     qml.PauliZ(wires[n])
 
 
-def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, *args, **kwargs):
-    assert len(ancilla_wires) == len(wires) + 2
-    qml.Hadamard(wires=ancilla_wires[0])
-    W(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
-    qml.ctrl(G, control=ancilla_wires[0], control_values=[0])(base=U, wires=ancilla_wires[1:]+wires,p=p, **kwargs)
-    qml.ctrl(G_adj, control=ancilla_wires[0], control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,p=p, *args, **kwargs)
-    qml.Hadamard(wires=ancilla_wires[0])
-    W_adj(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
-    qml.PauliX(wires=ancilla_wires[0])
-    qml.PauliZ(wires=ancilla_wires[0])
-    qml.PauliX(wires=ancilla_wires[0])
-    
+def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, simulate=True, *args, **kwargs):
+    if simulate:
+        assert len(ancilla_wires) == 1
+        statevector = get_statevector(U, wires, *args, **kwargs)
+        if bool(p):
+            qml.BlockEncode(np.diag(statevector.imag), wires=ancilla_wires+wires)
+        else: 
+            qml.BlockEncode(np.diag(statevector.real), wires=ancilla_wires+wires)
+    else:
+        assert len(ancilla_wires) == len(wires) + 2
+        qml.Hadamard(wires=ancilla_wires[0])
+        W(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
+        qml.ctrl(G, control=ancilla_wires[0], control_values=[0])(base=U, wires=ancilla_wires[1:]+wires,p=p, **kwargs)
+        qml.ctrl(G_adj, control=ancilla_wires[0], control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,p=p, *args, **kwargs)
+        qml.Hadamard(wires=ancilla_wires[0])
+        W_adj(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
+        qml.PauliX(wires=ancilla_wires[0])
+        qml.PauliZ(wires=ancilla_wires[0])
+        qml.PauliX(wires=ancilla_wires[0])
+
+def get_statevector(U, wires, *args, **kwargs):
+    dev = qml.device("default.qubit", wires=len(wires))
+    @qml.qnode(dev)
+    def circuit():
+        U(wires=list(range(len(wires))), *args, **kwargs)
+        return qml.state()
+    return circuit()

@@ -73,7 +73,7 @@ phiset = convert_angles(phiset)
 
 dev = qml.device("lightning.qubit", wires=base_qubits)
 if simu:
-    dev2 = qml.device("lightning.qubit", wires=2*base_qubits+2)
+    dev2 = qml.device("lightning.qubit", wires=base_qubits+1)
 else: 
     dev2 = qml.device("lightning.qubit", wires=2*base_qubits+3)
 
@@ -83,8 +83,8 @@ def circuit():
     return qml.state()
 
 if simu:
-    wires = list(range(base_qubits+2, 2*base_qubits+2))
-    ancilla_wires = list(range(base_qubits+2))
+    wires = list(range(1, base_qubits+1))
+    ancilla_wires = [0]
 else: 
     wires = list(range(base_qubits+3, 2*base_qubits+3))
     ancilla_wires = list(range(base_qubits+3))
