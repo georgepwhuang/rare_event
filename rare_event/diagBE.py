@@ -79,7 +79,6 @@ def G_adj(base, wires, p, *args, **kwargs):
     W(base, wires, p, *args, **kwargs)
     qml.PauliZ(wires[n])
 
-
 def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, simulate=True, *args, **kwargs):
     if simulate:
         assert len(ancilla_wires) == 1
@@ -100,6 +99,7 @@ def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, simulate=True, *args
         qml.PauliZ(wires=ancilla_wires[0])
         qml.PauliX(wires=ancilla_wires[0])
 
+@qml.QueuingManager.stop_recording()
 def get_statevector(U, wires, *args, **kwargs):
     dev = qml.device("default.qubit", wires=len(wires))
     @qml.qnode(dev)

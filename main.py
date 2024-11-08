@@ -1,5 +1,5 @@
 import sys
-from rare_event import iMPS, RecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET
+from rare_event import iMPS, MarkovianRecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET
 import numpy as np
 from scipy.special import erf
 import pennylane as qml
@@ -10,12 +10,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-LAYERS = 2
+LAYERS = 3
 
 DELTA = 20
 THRESHOLD = 0.1
 
-SIMULATE = False
+SIMULATE = True
 
 def pcoin(p):
     T0 = np.array([
@@ -37,7 +37,7 @@ transition = imps_pcoin.to_unitary()
 base_qubits = LAYERS + 1
 
 func = lambda x: (erf(DELTA*(x + THRESHOLD)) - erf(DELTA*(x - THRESHOLD))) / 2
-polydeg = 4
+polydeg = 10
 max_scale = 0.9 # Maximum norm (<1) for rescaling.
 true_func = lambda x: np.where(np.abs(x) < THRESHOLD, 1, 0)
 
@@ -78,28 +78,33 @@ dev = qml.device("lightning.qubit", wires=base_qubits)
 
 @qml.qnode(dev)
 def circuit():
-    RecurrentQuantumCircuit(wires=list(range(base_qubits)),memory_state_prep=mem_0, transition=transition)
+    MarkovianRecurrentQuantumCircuit(wires=list(range(base_qubits)),memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
     return qml.state()
 
 if SIMULATE:
-    dev2 = qml.device("lightning.qubit", wires=base_qubits+1)
+    dev2 = qml.device("default.qubit", wires=base_qubits+1)
     wires = list(range(1, base_qubits+1))
     ancilla_wires = [0]
+    control_wires = [0, 1]
+    rotation_wire = None
 else: 
-    dev2 = qml.device("lightning.qubit", wires=2*base_qubits+3)
+    dev2 = qml.device("default.qubit", wires=2*base_qubits+3)
     wires = list(range(base_qubits+3, 2*base_qubits+3))
-    ancilla_wires = list(range(base_qubits+3))
+    ancilla_wires = list(range(1, base_qubits+3))
+    control_wires = list(range(1, base_qubits+4))
+    rotation_wire = [0]
     
 @qml.qnode(dev2)
 def circuitGate():
-    QET(RealDiagonalBlockEncoding,U=RecurrentQuantumCircuit, wires=wires, ancilla_wires=ancilla_wires, angles=phiset, simulate=SIMULATE, memory_state_prep=mem_0, transition=transition)
+    QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, wires=wires, ancilla_wires=ancilla_wires, control_wires=control_wires, rotation_wire=rotation_wire, angles=phiset, simulate=SIMULATE, memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
     return qml.state()
 
-x = circuit().real
+x = circuit().real[0:2**(base_qubits-1)]
+print(x)
 print(true_func(x))
 
 mat = qml.matrix(circuitGate)()
-print(np.diag((mat * (np.abs(mat)>1e-8)).real[:2**base_qubits,:2**base_qubits]))
+print(np.round(np.diag((mat))[:2**(base_qubits-1)], 5).real)
 
 try:
     fig, ax = qml.draw_mpl(circuitGate, decimals=2)()
