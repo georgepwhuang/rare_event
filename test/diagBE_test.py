@@ -28,10 +28,10 @@ def circuitSimu():
 
 print(circuit().real)
 mat = qml.matrix(circuitGate)()
-print(np.round(np.diag((mat))[:4], 8).real)
+print(np.round(np.diag((mat))[:4], 5).real)
 
 mat = qml.matrix(circuitSimu)()
-print(np.round(np.diag((mat))[:4], 8).real)
+print(np.round(np.diag((mat))[:4], 5).real)
 
 fig, ax = qml.draw_mpl(circuitGate)()
 fig.savefig('diagBE.png')

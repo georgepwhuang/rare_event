@@ -56,10 +56,10 @@ def circuitSimu():
 x = circuit().real
 print((5*x**3-3*x)/2)
 mat = qml.matrix(circuitGate)()
-print(np.round(np.diag((mat))[:2**(base_qubits-1)], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5).real)
 
 mat = qml.matrix(circuitSimu)()
-print(np.round(np.diag((mat))[:2**(base_qubits-1)], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5).real)
 
 fig, ax = qml.draw_mpl(circuitGate)()
 fig.savefig('qet.png')

@@ -52,10 +52,10 @@ def circuitSimu():
 
 print(circuit().real)
 mat = qml.matrix(circuitGate)()
-print(np.round(np.diag((mat))[:2**(base_qubits-1)], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5).real)
 
 mat = qml.matrix(circuitSimu)()
-print(np.round(np.diag((mat))[:2**(base_qubits-1)], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5).real)
 
 fig, ax = qml.draw_mpl(circuit)()
 fig.savefig('rqc.png')
