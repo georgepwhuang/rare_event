@@ -1,18 +1,16 @@
 import sys
-from rare_event import iMPS, MarkovianRecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET
+from rare_event import iMPS, MarkovianRecurrentQuantumCircuit, RealDiagonalBlockEncoding, QET, draw
 import numpy as np
 from scipy.special import erf
 import pennylane as qml
 from pyqsp import angle_sequence, response
 from pyqsp.poly import PolyTaylorSeries
-import matplotlib.pyplot as plt
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 LAYERS = 4
-THRESHOLD = 0.1
 POLYDEG = 10
 SIMULATE = True
 
@@ -35,12 +33,13 @@ transition = imps_pcoin.to_unitary()
 
 base_qubits = LAYERS + 1
 
-delta = 50
+delta = 100
 
-func = lambda x: (erf(delta*(x + THRESHOLD)) - erf(delta*(x - THRESHOLD))) / 2
-polydeg = 10
+threshold = np.sqrt(2**((p*np.log2(p)+(1-p)*np.log2(1-p))*LAYERS)/10.0)
+
+func = lambda x: (erf(delta*(x + threshold)) - erf(delta*(x - threshold))) / 2
 max_scale = 0.9 # Maximum norm (<1) for rescaling.
-true_func = lambda x: np.where(np.abs(x) < THRESHOLD, 1, 0)
+true_func = lambda x: np.where(np.abs(x) < threshold, 1, 0)
 
 
 poly = PolyTaylorSeries().taylor_series(
@@ -100,33 +99,15 @@ def circuitGate():
     QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, wires=wires, ancilla_wires=ancilla_wires, control_wires=control_wires, rotation_wire=rotation_wire, angles=phiset, simulate=SIMULATE, memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
     return qml.state()
 
-x = np.arange(1, 2**LAYERS+1)
 root_prob = circuit().real[0:2**LAYERS]
-prob = root_prob**2
+original = root_prob**2
 thresholded = true_func(root_prob)
 mat = qml.matrix(circuitGate)()
 obtained_value = np.diag(mat).real[:2**LAYERS]
 amplified = obtained_value ** 2
-amplified = amplified / np.linalg.norm(amplified)
+amplified = amplified / np.linalg.norm(amplified, 1)
 
-fig, ax = plt.subplots(2)
-ax[0].bar(x, thresholded, color='lightgrey', label='rare event', width=1)
-ax[0].bar(x, prob, color='r', label='original')
-ax[0].axhline(y=THRESHOLD**2, color='gray', linestyle='--')
-ax[1].bar(x, thresholded, color='lightgrey', label='rare event', width=1)
-ax[1].bar(x, amplified, color='b', label='amplified')
-ax[0].set_xticks(x, x)
-ax[1].set_xticks(x, x)
-ax[0].set_ylim(0, 1)
-ax[1].set_ylim(0, 1)
-ax[0].set_ylabel("Probability")
-ax[1].set_ylabel("Probability")
-ax[1].set_xlabel("Event")
-ax[0].legend()
-ax[1].legend()
-fig.suptitle("Rare Event Identification")
-plt.tight_layout()
-plt.savefig('results.png')
+draw(threshold, LAYERS, original, amplified, thresholded)
 
 try:
     fig, ax = qml.draw_mpl(circuitGate, decimals=2)()

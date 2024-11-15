@@ -17,7 +17,7 @@ def QET(BE, wires, ancilla_wires, angles, simulate=True, control_wires=None, rot
             qml.PCPhase(dim=dim, wires=control_wires+uncontrolled_wires, phi = angles[-i-1])
             BE(wires=wires, ancilla_wires=ancilla_wires, simulate=simulate, *args, **kwargs)
             qml.PCPhase(dim=dim, wires=control_wires+uncontrolled_wires, phi = angles[-i-2])
-            qml.adjoint(BE)(wires=wires, ancilla_wires=ancilla_wires, *args, **kwargs)
+            qml.adjoint(BE)(wires=wires, ancilla_wires=ancilla_wires, simulate=simulate, *args, **kwargs)
         qml.PCPhase(dim=dim, wires=control_wires+uncontrolled_wires, phi = angles[-i-3])
         if len(angles) % 2 == 0:
             BE(wires=wires, ancilla_wires=ancilla_wires, simulate=simulate, *args, **kwargs)

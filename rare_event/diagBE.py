@@ -40,6 +40,12 @@ def C(wires):
     n = len(wires)//2
     for i in range(n):
         qml.Toffoli(wires=[wires[n], wires[n+i+1], wires[i]])
+        
+def C_adj(wires):
+    assert len(wires) % 2 == 1
+    n = len(wires)//2
+    for i in range(n-1, -1, -1):
+        qml.Toffoli(wires=[wires[n], wires[n+i+1], wires[i]])
 
 
 def W(base, wires, p, *args, **kwargs):
@@ -58,7 +64,7 @@ def W_adj(base, wires, p, *args, **kwargs):
     qml.Hadamard(wires[n])
     if bool(p):
         qml.adjoint(qml.S)(wires[n])
-    C(wires)
+    C_adj(wires)
     Uc_adj(base, wires, *args, **kwargs)
     qml.Hadamard(wires[n])
     
