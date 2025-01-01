@@ -6,10 +6,9 @@ import numpy as np
 def MultiControlledZ(wires, control_values=None):
     if control_values is None:
         control_values = [0] * (len(wires) - 1)
-    qml.Hadamard(wires=[wires[-1]])
-    qml.MultiControlledX(wires=wires, control_values=control_values)
-    qml.Hadamard(wires=[wires[-1]])
-
+    qml.ctrl(qml.Z(wires=wires[-1]), 
+             control=wires[:-1], 
+             control_values=control_values)
 
 def R(wires):
     assert len(wires) % 2 == 1
@@ -22,18 +21,28 @@ def Uc(base, wires, *args, **kwargs):
     assert len(wires) % 2 == 1
     n = len(wires)//2
     if isinstance(base, TensorLike):
-        qml.ControlledQubitUnitary(base, control_wires=wires[n], wires=wires[:n], control_values=[0], unitary_check=True)
+        qml.ControlledQubitUnitary(base, 
+                                   control_wires=wires[n], 
+                                   wires=wires[:n], 
+                                   control_values=[0], 
+                                   unitary_check=True)
     elif isinstance(base, qml.operation.Operator) or callable(base):
-        qml.ctrl(base, control=wires[n], control_values=[0])(wires=wires[:n], *args, **kwargs)
+        qml.ctrl(base, control=wires[n], 
+                 control_values=[0])(wires=wires[:n], *args, **kwargs)
         
 def Uc_adj(base, wires, *args, **kwargs):
     assert len(wires) % 2 == 1
     n = len(wires)//2
     if isinstance(base, TensorLike):
-        qml.adjoint(qml.ControlledQubitUnitary)(base, control_wires=wires[n], wires=wires[:n], control_values=[0], unitary_check=True)
+        qml.adjoint(qml.ControlledQubitUnitary)(base, 
+                                                control_wires=wires[n], 
+                                                wires=wires[:n], 
+                                                control_values=[0], 
+                                                unitary_check=True)
     elif isinstance(base, qml.operation.Operator) or callable(base):
-        qml.ctrl(qml.adjoint(base), control=wires[n], control_values=[0])(wires=wires[:n], *args, **kwargs)
-    
+        qml.ctrl(qml.adjoint(base), 
+                 control=wires[n], 
+                 control_values=[0])(wires=wires[:n], *args, **kwargs)
 
 def C(wires):
     assert len(wires) % 2 == 1
@@ -46,7 +55,6 @@ def C_adj(wires):
     n = len(wires)//2
     for i in range(n-1, -1, -1):
         qml.Toffoli(wires=[wires[n], wires[n+i+1], wires[i]])
-
 
 def W(base, wires, p, *args, **kwargs):
     assert len(wires) % 2 == 1
@@ -67,7 +75,6 @@ def W_adj(base, wires, p, *args, **kwargs):
     C_adj(wires)
     Uc_adj(base, wires, *args, **kwargs)
     qml.Hadamard(wires[n])
-    
 
 def G(base, wires, p, *args, **kwargs):
     assert len(wires) % 2 == 1
@@ -85,20 +92,29 @@ def G_adj(base, wires, p, *args, **kwargs):
     W(base, wires, p, *args, **kwargs)
     qml.PauliZ(wires[n])
 
-def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, simulate=True, *args, **kwargs):
+def RealDiagonalBlockEncoding(U, wires, ancilla_wires,
+                              p=0, simulate=True, *args, **kwargs):
     if simulate:
         assert len(ancilla_wires) == 1
         statevector = get_statevector(U, wires, *args, **kwargs)
         if bool(p):
-            qml.BlockEncode(np.diag(statevector.imag), wires=ancilla_wires+wires)
+            qml.BlockEncode(np.diag(statevector.imag), 
+                            wires=ancilla_wires+wires)
         else: 
-            qml.BlockEncode(np.diag(statevector.real), wires=ancilla_wires+wires)
+            qml.BlockEncode(np.diag(statevector.real), 
+                            wires=ancilla_wires+wires)
     else:
         assert len(ancilla_wires) == len(wires) + 2
         qml.Hadamard(wires=ancilla_wires[0])
-        W(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
-        qml.ctrl(G, control=ancilla_wires[0], control_values=[0])(base=U, wires=ancilla_wires[1:]+wires,p=p, **kwargs)
-        qml.ctrl(G_adj, control=ancilla_wires[0], control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,p=p, *args, **kwargs)
+        W(base=U, 
+          wires=ancilla_wires[1:]+wires, 
+          p=p, *args, **kwargs)
+        qml.ctrl(G, control=ancilla_wires[0], 
+                 control_values=[0])(base=U, wires=ancilla_wires[1:]+wires,
+                                     p=p, **kwargs)
+        qml.ctrl(G_adj, control=ancilla_wires[0], 
+                 control_values=[1])(base=U, wires=ancilla_wires[1:]+wires,
+                                     p=p, *args, **kwargs)
         qml.Hadamard(wires=ancilla_wires[0])
         W_adj(base=U, wires=ancilla_wires[1:]+wires, p=p, *args, **kwargs)
         qml.PauliX(wires=ancilla_wires[0])
@@ -107,7 +123,7 @@ def RealDiagonalBlockEncoding(U, wires, ancilla_wires, p=0, simulate=True, *args
 
 @qml.QueuingManager.stop_recording()
 def get_statevector(U, wires, *args, **kwargs):
-    dev = qml.device("default.qubit", wires=len(wires))
+    dev = qml.device("lightning.qubit", wires=len(wires))
     @qml.qnode(dev)
     def circuit():
         U(wires=list(range(len(wires))), *args, **kwargs)

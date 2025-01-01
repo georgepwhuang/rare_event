@@ -36,30 +36,37 @@ angles = [-0.20409113, -0.91173829, 0.91173829, 0.20409113]
 
 dev = qml.device("default.qubit", wires=base_qubits)
 dev2 = qml.device("default.qubit", wires= 2*base_qubits+3)
-dev3 = qml.device("default.qubit", wires= base_qubits+1)
+dev3 = qml.device("default.qubit", wires= base_qubits+2)
 
 @qml.qnode(dev)
 def circuit():
-    MarkovianRecurrentQuantumCircuit(wires=list(range(base_qubits)),memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
+    MarkovianRecurrentQuantumCircuit(wires=list(range(base_qubits)),
+                                     memory_state_prep_list=[mem_0, mem_1], 
+                                     initial_state=0, transition=transition)
     return qml.state()
 
 @qml.qnode(dev2)
 def circuitGate():
-    QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, wires=list(range(base_qubits+3, 2*base_qubits+3)), ancilla_wires=list(range(1, base_qubits+3)), control_wires=list(range(1, base_qubits+4)), rotation_wire =[0], simulate=False, angles=angles,memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
+    QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, 
+        wires=list(range(base_qubits+3, 2*base_qubits+3)), ancilla_wires=list(range(1, base_qubits+3)), 
+        control_wires=list(range(1, base_qubits+4)), rotation_wire = 0, simulate=False, 
+        angles=angles, memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
     return qml.state()
 
 @qml.qnode(dev3)
 def circuitSimu():
-    QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, wires=list(range(1, base_qubits+1)), ancilla_wires=[0], control_wires=[0, 1], angles=angles,memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
+    QET(RealDiagonalBlockEncoding,U=MarkovianRecurrentQuantumCircuit, 
+        wires=list(range(2, base_qubits+2)), ancilla_wires=[1], control_wires=[1, 2], rotation_wire = 0, 
+        angles=angles, memory_state_prep_list=[mem_0, mem_1], initial_state=0, transition=transition)
     return qml.state()
 
 x = circuit().real
 print((5*x**3-3*x)/2)
 mat = qml.matrix(circuitGate)()
-print(np.round(np.diag((mat))[:2**layers], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5))
 
 mat = qml.matrix(circuitSimu)()
-print(np.round(np.diag((mat))[:2**layers], 5).real)
+print(np.round(np.diag((mat))[:2**layers], 5))
 
 fig, ax = qml.draw_mpl(circuitGate)()
 fig.savefig('qet.png')
