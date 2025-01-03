@@ -120,7 +120,20 @@ def RealDiagonalBlockEncoding(U, wires, ancilla_wires,
         qml.PauliX(wires=ancilla_wires[0])
         qml.PauliZ(wires=ancilla_wires[0])
         qml.PauliX(wires=ancilla_wires[0])
-
+        
+def ShiftedDiagonalBlockEncoding(U, wires, ancilla_wires,
+                                 p=0, simulate=True, identity_ratio=1, *args, **kwargs):
+    lcu_wire = ancilla_wires[-1]
+    theta = np.arctan(np.sqrt(np.abs(identity_ratio)))*2
+    phi = np.angle(identity_ratio)
+    qml.RY(-theta, lcu_wire)
+    qml.ctrl(RealDiagonalBlockEncoding, 
+                  control=lcu_wire, 
+                  control_values=0)(U, wires, ancilla_wires[:-1],
+                                      p, simulate, *args, **kwargs)
+    qml.PhaseShift(phi, lcu_wire)
+    qml.RY(theta, lcu_wire)
+    
 @qml.QueuingManager.stop_recording()
 def get_statevector(U, wires, *args, **kwargs):
     dev = qml.device("lightning.qubit", wires=len(wires))

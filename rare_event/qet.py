@@ -8,7 +8,7 @@ def ProjCtrlPhaseShift(control_wires, target_wire, phi):
                          control_values=[0]*len(control_wires))
     
 def QET(BE, wires, ancilla_wires, angles, 
-simulate=True, control_wires=None, 
+        simulate=True, control_wires=None, 
         rotation_wire=None, *args, **kwargs):
     deg = len(angles)
     qml.Hadamard(rotation_wire)
