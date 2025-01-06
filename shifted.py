@@ -118,8 +118,9 @@ def reflect(wires):
 def uniformStatePrep():
     for wire in main_wires:
         qml.Hadamard(wires=wire)
-    qml.Hadamard(lcu_wire)
-    qml.ctrl(QET, lcu_wire, 1)(ShiftedDiagonalBlockEncoding,
+    theta = np.arctan(np.sqrt(max_scale))*2
+    qml.RY(-theta, lcu_wire)
+    qml.ctrl(QET, lcu_wire, 0)(ShiftedDiagonalBlockEncoding,
                                U=MarkovianRecurrentQuantumCircuit, 
                                wires=wires, 
                                ancilla_wires=ancilla_wires, 
@@ -131,7 +132,7 @@ def uniformStatePrep():
                                initial_state=0, 
                                transition=transition,
                                identity_ratio = -4/3*threshold)
-    qml.Hadamard(lcu_wire)
+    qml.RY(theta, lcu_wire)
     
 @qml.prod
 def importanceStatePrep():
@@ -139,8 +140,9 @@ def importanceStatePrep():
                                      memory_state_prep_list=[mem_0, mem_1], 
                                      initial_state=0, 
                                      transition=transition)
-    qml.Hadamard(lcu_wire)
-    qml.ctrl(QET, lcu_wire, 1)(ShiftedDiagonalBlockEncoding,
+    theta = np.arctan(np.sqrt(max_scale))*2
+    qml.RY(-theta, lcu_wire)
+    qml.ctrl(QET, lcu_wire, 0)(ShiftedDiagonalBlockEncoding,
                                U=MarkovianRecurrentQuantumCircuit, 
                                wires=wires, 
                                ancilla_wires=ancilla_wires, 
@@ -152,7 +154,7 @@ def importanceStatePrep():
                                initial_state=0, 
                                transition=transition,
                                identity_ratio = -4/3*threshold)
-    qml.Hadamard(lcu_wire)
+    qml.RY(theta, lcu_wire)
     
 U = importanceStatePrep()
 O = reflect(other_wires)
@@ -160,7 +162,7 @@ O = reflect(other_wires)
 @qml.qnode(dev2)
 def circuitSim():
     importanceStatePrep()
-    qml.AmplitudeAmplification(U, O, iters=35, fixed_point=True, work_wire=work_wire, p_min=0.99)
+    qml.AmplitudeAmplification(U, O, iters=55, fixed_point=True, work_wire=work_wire, p_min=0.99)
     return qml.probs(main_wires)
 
 original = circuit()
@@ -169,8 +171,9 @@ amplified = circuitSim()
 print(amplified)
 plot_importance(threshold, LAYERS, original, amplified, thresholded)
 
-try:
-    fig, ax = qml.draw_mpl(circuitSim)()
-    fig.savefig('algo.png')
-except ValueError:
-    print("Figure too long", file=sys.stderr)
+if not SIMULATE:
+    try:
+        fig, ax = qml.draw_mpl(circuitSim)()
+        fig.savefig('algo.png')
+    except ValueError:
+        print("Figure too long", file=sys.stderr)

@@ -152,7 +152,7 @@ O = reflect(other_wires)
 @qml.qnode(dev2)
 def circuitSim():
     importanceStatePrep()
-    qml.AmplitudeAmplification(U, O, iters=35, fixed_point=True, work_wire=work_wire, p_min=0.999)
+    qml.AmplitudeAmplification(U, O, iters=55, fixed_point=True, work_wire=work_wire, p_min=0.99)
     return qml.probs(main_wires)
 
 original = circuit()
@@ -161,8 +161,9 @@ amplified = circuitSim()
 print(amplified)
 plot_importance(threshold, LAYERS, original, amplified, thresholded)
 
-try:
-    fig, ax = qml.draw_mpl(circuitSim)()
-    fig.savefig('algo.png')
-except ValueError:
-    print("Figure too long", file=sys.stderr)
+if not SIMULATE:
+    try:
+        fig, ax = qml.draw_mpl(circuitSim)()
+        fig.savefig('algo.png')
+    except ValueError:
+        print("Figure too long", file=sys.stderr)
