@@ -20,7 +20,7 @@ import scipy.linalg as LA
 import numpy as np
 
 
-from tools import digits, digits_to_int
+from .tools import digits, digits_to_int
 
 #%%
 def causal_asymmetry(p, q) :

@@ -1,12 +1,16 @@
 import numpy as np
-import math
 from rare_event.angles import generate_thresh_angles
 from rare_event.amplify import generate_qtvd, generate_ctvd
+import math
 import json
 
-LAYERS = 7
+LAYERS = 6
+deg = 200
+delta = 60
 K = 1.5
-p = 0.2
+
+queries = delta + 1
+
 def generate_pcoin_distribution(p, L):
     original = []
     for n in range(pow(2, L)):
@@ -20,31 +24,25 @@ def generate_pcoin_distribution(p, L):
 
 qres = []
 cres = []
-cquery = []
-qsum = []
 
-gap = 10
-grid = np.arange(10, 501, gap)
-
-for deg in grid:
+gap = 0.02
+grid = np.arange(0.1, 0.3, gap)
+for p in grid:
     #Generate probability distribution
     original = generate_pcoin_distribution(p, LAYERS)
     entropy = (p*np.log2(p)+(1-p)*np.log2(1-p))
-    delta = math.ceil(deg/5)
-
     threshold = 2**(entropy*LAYERS*K/2.0)
     threshed = np.where(pow(original, 0.5) < threshold, 1, 0)
     actual = original * threshed
     actual = actual / np.sum(actual)
-
+    
+    #Generate projector angles
     proj_set = generate_thresh_angles(deg, delta, threshold)
     qtvd, qprob_sum = generate_qtvd(original, actual, proj_set)
-    queries = int(math.ceil(deg / np.sqrt(qprob_sum)))
-    ctvd = generate_ctvd(original, actual, queries, threshold, repeat=1000, groups=10)
+    queries = int(math.ceil((deg + 1) / np.sqrt(qprob_sum)))
+    ctvd, ctvd_std = generate_ctvd(original, actual, queries, repeat=100)
     qres.append(qtvd)
     cres.append(ctvd)
-    cquery.append(queries)
-    qsum.append(qprob_sum)
-
+    
 with open("pcoin.json", "w") as f:
-    json.dump({"x":grid.tolist(), "q":qres, "c":cres,"cquery":cquery, "qsum":qsum}, f)
+    json.dump({"x":grid, "q":qres, "c":cres}, f)
