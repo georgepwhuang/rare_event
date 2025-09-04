@@ -1,6 +1,6 @@
 import numpy as np
 from rare_event.angles import generate_thresh_angles
-from rare_event.amplify import generate_qtvd, generate_ctvd
+from rare_event.qtvd import generate_qtvd, generate_ctvd
 import math
 import json
 

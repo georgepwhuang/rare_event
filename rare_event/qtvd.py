@@ -36,30 +36,4 @@ def generate_qtvd(prob, actual, angles):
     qprobs = qprobs / qprob_sum
     
     qtvd = np.linalg.norm(actual - qprobs, ord=1)/2.0
-    return qtvd, qprob_sum
-    
-def generate_ctvd(probs, actual, queries, threshold, repeat=1, groups=1):
-    cvtd = []
-    in_bin = repeat//groups
-    remainder = repeat - (groups*in_bin)
-    group_list = [in_bin+1] * remainder + [in_bin] * (groups-remainder)
-    for repeat in group_list:
-        ctvd_bin = []
-        for _ in range(repeat):
-            samples = np.random.choice(len(probs), queries, p=probs)
-            values, counts = np.unique(samples, return_counts=True)
-            values = values.astype(np.int32)
-            full_indices = np.arange(len(probs))
-            uni_samp = np.zeros_like(full_indices)
-            uni_samp[values] = counts
-            uni_samp = uni_samp / np.sum(uni_samp)
-            mask = np.where(pow(uni_samp, 0.5) < threshold, 1, 0)
-
-            imp_samp = probs * mask 
-            imp_samp = imp_samp / np.sum(imp_samp)
-            ctvd_bin.append(np.linalg.norm(actual - imp_samp, ord=1)/2.0)
-        ctvd_bin = np.mean(ctvd_bin, axis=0)
-        cvtd.append(ctvd_bin)
-    cvtd = np.stack(cvtd)
-    cvtd = np.mean(cvtd, axis=0)
-    return cvtd
+    return qtvd
