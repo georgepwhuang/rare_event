@@ -25,7 +25,7 @@ cquery = []
 qsum = []
 
 gap = 10
-grid = np.arange(10, 1001, gap)
+grid = np.arange(10, 1501, gap)
 
 original = generate_pcoin_distribution(p, LAYERS)
 entropy = (p*np.log2(p)+(1-p)*np.log2(1-p))

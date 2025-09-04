@@ -43,7 +43,7 @@ cquery = []
 qsum = []
 
 gap = 10
-grid = np.arange(10, 1001, gap)
+grid = np.arange(10, 2001, gap)
 
 original = generate_dising_distribution(1, 2, 3, 0.8, LAYERS)
 entropy = generate_dising_entropy(1, 2, 3, 0.8)
