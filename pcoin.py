@@ -43,9 +43,9 @@ for queries in grid:
     delta = math.ceil(deg/5)
 
     #Generate quantum 
-    proj_set = generate_thresh_angles(deg, delta, threshold)
-    qtvd = generate_qtvd(original, actual, proj_set)
-    qres.append(qtvd)
+    # proj_set = generate_thresh_angles(deg, delta, threshold)
+    # qtvd = generate_qtvd(original, actual, proj_set)
+    # qres.append(qtvd)
 
     #Generate classical 
     ctvd = generate_ctvd(original, actual, queries, threshold, repeat=1000)
