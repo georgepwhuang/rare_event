@@ -10,7 +10,6 @@ def generate_ctvd(probs, actual, queries, threshold, repeat=1000):
         uni_samp[values] = counts
         uni_samp = uni_samp / queries
         mask = np.where(uni_samp < threshold**2, 1, 0)
-        mask_size = np.sum(mask)
 
         imp_samp = probs * mask 
         imp_samp = imp_samp / np.sum(imp_samp)

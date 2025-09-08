@@ -1,6 +1,6 @@
 import numpy as np
 
-def generate_qtvd(prob, actual, angles):
+def generate_qprobs(prob, angles):
     statevector = np.sqrt(prob)
     state_diag = np.diag(statevector)
     inv_diag = np.diag(np.sqrt(1 - prob))
@@ -34,6 +34,9 @@ def generate_qtvd(prob, actual, angles):
     qprobs = qprobs[:length]
     qprob_sum = np.sum(qprobs)
     qprobs = qprobs / qprob_sum
-    
+    return qprobs
+
+def generate_qtvd(prob, actual, angles):
+    qprobs = generate_qprobs(prob, angles)
     qtvd = np.linalg.norm(actual - qprobs, ord=1)/2.0
     return qtvd

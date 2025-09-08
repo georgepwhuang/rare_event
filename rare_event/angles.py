@@ -21,7 +21,7 @@ def generate_thresh_angles(deg, delta, threshold):
     poly = PolyTaylorSeries().taylor_series(
         func=func,
         degree=deg,
-        max_scale=0.99,
+        max_scale=0.9,
         chebyshev_basis=True,
         cheb_samples=2*deg)
 
