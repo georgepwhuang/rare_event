@@ -55,7 +55,7 @@ actual = actual / np.sum(actual)
 
 for deg in grid:
     # Generate probability distribution
-    queries = int(math.ceil(deg / np.sqrt(p_rare)))
+    queries = int(deg * math.ceil(1 / np.sqrt(p_rare)))
     delta = int(deg/10)
 
     # Generate quantum 
