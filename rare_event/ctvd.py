@@ -14,5 +14,5 @@ def generate_ctvd(probs, actual, queries, threshold, repeat=1000):
         imp_samp = probs * mask 
         imp_samp = imp_samp / np.sum(imp_samp)
         ctvd.append(np.linalg.norm(actual - imp_samp, ord=1)/2.0)
-    cvtd = np.mean(ctvd, axis=0)
-    return cvtd
+    ctvd = np.mean(ctvd, axis=0)
+    return ctvd
