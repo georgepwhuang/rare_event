@@ -3,38 +3,28 @@ import math
 from rare_event.angles import generate_thresh_angles
 from rare_event.qtvd import generate_qtvd
 from rare_event.ctvd import generate_ctvd
+from rare_event.distributions import (
+    generate_dising_distribution,
+    generate_dising_entropy,
+    threshold_distribution,
+)
 import json
 
 LAYERS = 8
-K = 2.2
-p = 0.1
-def generate_pcoin_distribution(p, L):
-    original = []
-    for n in range(pow(2, L)):
-        mask = (1 << L) - 1
-        bitFlips = (n & mask) ^ (n >> 1)
-        flipCount = bin(bitFlips).count('1')
-        prob = pow(p, flipCount)*pow(1-p, L-flipCount)
-        original.append(prob)
-    original = np.array(original)
-    return original
+K = 2
 
-x = []
 qres = []
 cres = []
+x = []
 
 gap = 20
-grid = np.arange(20, 850, gap)
+grid = np.arange(20, 1001, gap)
 
-original = generate_pcoin_distribution(p, LAYERS)
-entropy = (p*np.log2(p)+(1-p)*np.log2(1-p))
+original = generate_dising_distribution(1, 2, 3, 0.8, LAYERS)
+entropy = generate_dising_entropy(1, 2, 3, 0.8)
 
 threshold = 2**(entropy*LAYERS*K/2.0)
-threshed = np.where(pow(original, 0.5) < threshold, 1, 0)
-rare_num = np.sum(threshed)
-actual = original * threshed
-p_rare = np.sum(actual)
-actual = actual / np.sum(actual)
+_, actual, p_rare = threshold_distribution(original, threshold)
 
 for deg in grid:
     # Generate probability distribution
@@ -51,7 +41,7 @@ for deg in grid:
     cres.append(ctvd)
     x.append(queries)
 
-with open("pcoin.json", "w") as f:
+with open("./data/deg_diff_dising.json", "w") as f:
     json.dump({"x":x, 
                "q":qres, 
                "c":cres}, f)
