@@ -2,17 +2,22 @@ import numpy as np
 import math
 from rare_event.angles import generate_thresh_angles
 from rare_event.qtvd import generate_qtvd
-from rare_event.ctvd import generate_ctvd
+from rare_event.ctvd import generate_ctvd_confidence
 from rare_event.distributions import generate_pcoin_distribution, threshold_distribution
 import json
 
 LAYERS = 8
 K = 2.2
 p = 0.1
+REPEAT = 100
 
 x = []
 qres = []
 cres = []
+cstd = []
+csem = []
+clow = []
+chigh = []
 
 gap = 20
 grid = np.arange(20, 850, gap)
@@ -34,11 +39,25 @@ for deg in grid:
     qres.append(qtvd)
 
     # Generate classical 
-    ctvd = generate_ctvd(original, actual, queries, threshold, repeat=1000)
+    ctvd, std, sem, low, high = generate_ctvd_confidence(
+        original, actual, queries, threshold, repeat=REPEAT)
     cres.append(ctvd)
+    cstd.append(std)
+    csem.append(sem)
+    clow.append(low)
+    chigh.append(high)
     x.append(queries)
 
 with open("./data/deg_diff_pcoin.json", "w") as f:
     json.dump({"x":x, 
                "q":qres, 
-               "c":cres}, f)
+               "c":cres,
+               "c_std":cstd,
+               "c_sem":csem,
+               "c_ci_low":clow,
+               "c_ci_high":chigh,
+               "metadata": {
+                   "repeat":REPEAT,
+                   "confidence_level":0.95,
+                   "interval":"Pointwise normal confidence interval for mean classical TVD, clipped to [0, 1]",
+               }}, f)

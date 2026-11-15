@@ -7,7 +7,7 @@ from rare_event.distributions import generate_dising_distribution, generate_disi
 from rare_event.qtvd import generate_qprobs
 
 LAYERS = 4
-K = 2
+K = 1.85
 
 original = generate_dising_distribution(1, 2, 3, 0.8, LAYERS)
 entropy = generate_dising_entropy(1, 2, 3, 0.8)

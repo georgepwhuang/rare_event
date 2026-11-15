@@ -34,7 +34,7 @@ def generate_dising_entropy(J0, delta, chi, T):
     trans_mat = trans_mat[0] + trans_mat[1]
     trans_mat = np.array(trans_mat)
     entropy = np.sum(trans_mat * np.nan_to_num(np.log2(trans_mat), neginf=0), axis=0)
-    eigenvalues, eigenvectors = np.linalg.eig(trans_mat.T)
+    eigenvalues, eigenvectors = np.linalg.eig(trans_mat)
     for i in range(len(eigenvalues)):
         if np.allclose(eigenvalues[i], 1):
             stationary = eigenvectors[:, i]
