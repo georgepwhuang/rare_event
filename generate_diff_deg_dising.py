@@ -59,8 +59,4 @@ with open("./data/deg_diff_dising.json", "w") as f:
                "c_sem":csem,
                "c_ci_low":clow,
                "c_ci_high":chigh,
-               "metadata": {
-                   "repeat":REPEAT,
-                   "confidence_level":0.95,
-                   "interval":"Pointwise normal confidence interval for mean classical TVD, clipped to [0, 1]",
-               }}, f)
+               }, f)

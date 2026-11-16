@@ -8,7 +8,7 @@ with open('./data/deg_diff_dising.json', 'r') as f:
 x = np.array(data["x"])
 q = np.array(data["q"])
 c = np.array(data["c"])
-confidence = 100 * data['metadata']['confidence_level']
+confidence = 95
 plt.rcParams.update({'font.size': 20, 'font.family': "serif","font.serif": "CMU Serif", 'text.usetex': True, 'text.latex.preamble': r'\usepackage{amsfonts}'})
 plt.figure(figsize=(12,6))
 plt.plot(x, q, label='Quantum (exact)', marker='o')
